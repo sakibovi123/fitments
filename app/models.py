@@ -25,6 +25,21 @@ class SubCategory(models.Model):
         return self.sub_category_title
 
 
+class Brand(models.Model):
+    created_at = models.DateField(default=date.today)
+    updated_at = models.DateField(default=date.today)
+    brand_name = models.CharField(max_length=255)
+    brand_logo = models.ImageField(upload_to="images/", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Brand"
+        verbose_name_plural = "Brands"
+
+    def __str__(self):
+        return self.brand_name
+
+
 class MultiImage(models.Model):
     image_uid = models.IntegerField()
     images = models.ImageField(upload_to="images/")
@@ -44,6 +59,7 @@ class Product(models.Model):
     product_title = models.CharField(max_length=255)
     category = models.ForeignKey(model=Category, on_delete=models.SET_NULL, null=True)
     sub_category = models.ForeignKey(model=SubCategory, on_delete=models.SET_NULL, null=True)
+    brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True)
     main_product_image = models.ImageField(upload_to="images/")
     multiple_image = models.ManyToManyField(MultiImage, blank=True)
     product_description = models.TextField()
