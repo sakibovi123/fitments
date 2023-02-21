@@ -18,7 +18,7 @@ class Category(models.Model):
 class SubCategory(models.Model):
     created_at = models.DateField(default=date.today)
     updated_at = models.DateField(default=date.today)
-    category = models.ForeignKey(models=Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     sub_category_title = models.CharField(max_length=255)
 
     def __str__(self):
@@ -57,8 +57,8 @@ class Product(models.Model):
     created_at = models.DateField(default=date.today)
     updated_at = models.DateField(default=date.today)
     product_title = models.CharField(max_length=255)
-    category = models.ForeignKey(model=Category, on_delete=models.SET_NULL, null=True)
-    sub_category = models.ForeignKey(model=SubCategory, on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    sub_category = models.ForeignKey(SubCategory, on_delete=models.SET_NULL, null=True)
     brand = models.ForeignKey(Brand, on_delete=models.SET_NULL, null=True)
     main_product_image = models.ImageField(upload_to="images/")
     multiple_image = models.ManyToManyField(MultiImage, blank=True)
@@ -68,6 +68,12 @@ class Product(models.Model):
         ordering = ["-created_at"]
         verbose_name = "Product"
         verbose_name_plural = "Products"
+        
+    def get_thumbnail(self):
+        if self.main_product_image:
+            return "http://127.0.0.1:8000" + self.main_product_image.url
+        else:
+            return " "
 
     def __str__(self):
         return self.product_title
@@ -76,6 +82,7 @@ class Product(models.Model):
 class Cart(models.Model):
     created_at = models.DateField(default=date.today)
     updated_at = models.DateField(default=date.today)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     cart_id = models.CharField(max_length=255)
     products = models.ManyToManyField(Product)
     quantity = models.PositiveIntegerField(default=0)
@@ -90,7 +97,7 @@ class Cart(models.Model):
 
     def generate_random_id(self):
         length = 12
-        return "".join(random.choices(random.randint, k=length))
+        return "".join(random.choices(string.ascii_lowercase, k=length))
 
     def save(self, *args, **kwargs):
         self.cart_id = self.generate_random_id()
@@ -104,7 +111,7 @@ class DeliveryMethod(models.Model):
     charge = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     class Meta:
-        ordering = ["=created_at"]
+        ordering = ["-created_at"]
         verbose_name = "DeliveryMethod"
         verbose_name_plural = "DeliveryMethods"
 
@@ -115,12 +122,13 @@ class PaymentMethod(models.Model):
     payment_method_name = models.CharField(max_length=255)
 
     class Meta:
-        ordering = ["=created_at"]
+        ordering = ["created_at"]
         verbose_name = "DeliveryMethod"
         verbose_name_plural = "DeliveryMethods"
 
 
 class Order(models.Model):
+    created_at = models.DateField(default=date.today)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     order_id = models.CharField(max_length=255)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
